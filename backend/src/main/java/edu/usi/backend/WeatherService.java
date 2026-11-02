@@ -1,6 +1,8 @@
 package edu.usi.backend;
 
 
+import org.springframework.http.HttpStatus;
+
 /*
  * WeatherService.java
  *
@@ -24,12 +26,14 @@ package edu.usi.backend;
 
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 // NWS connections
 import java.util.Map;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class WeatherService { 
@@ -107,6 +111,70 @@ public class WeatherService {
 
         // Returns the seven day forecast
         return new ArrayList<>(days.values());
+    }
+
+    // Retrieves detailed forecast information for a selected date
+    public Map<String, Object> getDailyForecast(LocalDate date) {
+
+        Map<String, Object> day = new LinkedHashMap<>();
+        day.put("date", date.toString());
+        day.put("daytime", null);
+        day.put("nighttime", null);
+
+        // Checks the requested date has an available forecast
+        boolean found = false;
+
+        // Check each NWS forecast period
+        for (Object item : getForecastPeriods()) {
+
+            Map<?, ?> period = (Map<?, ?>) item;
+
+            // Get the date associated with this forecast period
+            String periodDate =
+                ((String) period.get("startTime")).substring(0, 10);
+
+            // Skip periods that do not match the requested date
+            if (!periodDate.equals(date.toString())) {
+                continue;
+            }
+
+            found = true;
+
+            // Retrieve detailed information for this period
+            Map<String, Object> details = new LinkedHashMap<>();
+
+            details.put("temperature", period.get("temperature"));
+            details.put("temperatureUnit", period.get("temperatureUnit"));
+            details.put("shortForecast", period.get("shortForecast"));
+            details.put("detailedForecast", period.get("detailedForecast"));
+            details.put("windSpeed", period.get("windSpeed"));
+            details.put("windDirection", period.get("windDirection"));
+            details.put("icon", period.get("icon"));
+
+            // Retrieve precipitation probability
+            Map<?, ?> precipitation =
+                (Map<?, ?>) period.get("probabilityOfPrecipitation");
+
+            details.put("precipitationChance",
+                precipitation == null ? null : precipitation.get("value"));
+
+            // Separate daytime and nighttime forecasts
+            if (Boolean.TRUE.equals(period.get("isDaytime"))) {
+                day.put("daytime", details);
+            } else {
+                day.put("nighttime", details);
+            }
+        }
+
+        // Indicate when the requested date is unavailable
+        if (!found) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "No forecast available for " + date
+            );
+        }
+
+        return day;
     }
 
     // Retrieves forecast periods from the NWS API

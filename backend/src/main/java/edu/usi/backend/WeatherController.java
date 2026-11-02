@@ -24,6 +24,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 // CORS import
 import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.time.LocalDate;
+import java.util.Map;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.PathVariable;
+
 @RestController
 // Base URL
 @RequestMapping("/api/weather")
@@ -42,5 +47,14 @@ public class WeatherController {
     public Object getSevenDayForecast() {
         // Retrieves the forecast from WeatherService.java
         return weatherService.getSevenDayForecast();
+    }
+
+    // Creates the daily forecast endpoint
+    @GetMapping("/daily/{date}")
+    public Map<String, Object> getDailyForecast(
+        @PathVariable("date")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        return weatherService.getDailyForecast(date);
     }
 }
