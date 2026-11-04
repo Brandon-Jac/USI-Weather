@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Angular
+**/node_modules/
+**/.angular/
+**/dist/
+
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+
+# Local configuration and secrets
+**/appsettings.Development.json
+**/secrets.json
+.env
+.env.*

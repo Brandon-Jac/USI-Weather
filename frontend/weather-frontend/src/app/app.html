@@ -1,0 +1,310 @@
+<div class="weather-app">
+
+  <!-- USI HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="university-name">
+        UNIVERSITY OF SOUTHERN INDIANA
+      </div>
+
+      <h1>USI Weather</h1>
+      <p>Campus weather, made simple.</p>
+    </div>
+  </header>
+
+  <main class="dashboard">
+
+    <!-- WELCOME -->
+    <section class="welcome">
+      <span class="eyebrow">CAMPUS WEATHER CENTER</span>
+      <h2>Weather at USI</h2>
+      <p>Weather forecasts for Evansville, Indiana.</p>
+    </section>
+
+    <!-- LIVE CAMPUS FORECAST -->
+    <section class="current-weather">
+
+      <div class="weather-topline">
+        <strong>USI CAMPUS WEATHER</strong>
+
+        <span class="live-label">
+          <span class="live-dot"></span>
+          NWS FORECAST
+        </span>
+      </div>
+
+      <!-- LOADING -->
+      @if (loading) {
+        <div class="featured-status" role="status">
+          <h2>Loading campus forecast...</h2>
+          <p>Retrieving weather information...</p>
+        </div>
+      }
+
+      <!-- FEATURED FORECAST -->
+      @else if (forecast[0]; as featured) {
+
+        <div class="current-content">
+
+          <div class="featured-main">
+            <span class="weather-eyebrow">
+              {{ featured.day }}'s Forecast
+            </span>
+
+            <h2 class="featured-heading">
+              {{ featured.conditions }}
+            </h2>
+
+            <p class="weather-location">
+              Evansville, Indiana · USI Campus
+            </p>
+
+            <div class="temperature">
+              {{ featured.high == null ? '—' : featured.high + '°' }}
+              <span class="temperature-unit">F</span>
+            </div>
+
+            <p class="temperature-description">
+              Forecast High Temperature
+            </p>
+          </div>
+
+          <div class="featured-visual">
+            @if (featured.iconUrl) {
+              <img
+                class="featured-icon"
+                [src]="featured.iconUrl"
+                [alt]="featured.conditions">
+            } @else {
+              <div class="weather-icon">🌤️</div>
+            }
+          </div>
+
+        </div>
+
+        <!-- LIVE WEATHER STATISTICS -->
+        <div class="weather-stats">
+
+          <div>
+            <span>Forecast High</span>
+            <strong>
+              {{ featured.high == null ? 'N/A' : featured.high + '°F' }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Forecast Low</span>
+            <strong>
+              {{ featured.low == null ? 'N/A' : featured.low + '°F' }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Chance of Rain</span>
+            <strong>
+              {{ featured.rainChance == null
+                ? 'N/A'
+                : featured.rainChance + '%' }}
+            </strong>
+          </div>
+
+        </div>
+
+        <p class="forecast-source">
+          Forecast provided by the National Weather Service.
+          Temperatures are predictions, not live observations.
+          Rain chance is the highest forecast probability for the day.
+        </p>
+
+      } @else if (error) {
+
+        <!-- ERROR -->
+        <div class="featured-status" role="alert">
+          <h2>Weather temporarily unavailable</h2>
+          <p>Unable to retrieve the latest forecast.</p>
+
+          <button
+            type="button"
+            class="featured-retry"
+            (click)="loadForecast()">
+            Try Again
+          </button>
+        </div>
+
+      } @else {
+
+        <!-- EMPTY FORECAST -->
+        <div class="featured-status">
+          <h2>No forecast available</h2>
+          <p>Please check back later.</p>
+        </div>
+      }
+
+    </section>
+
+    <!-- SEVEN-DAY FORECAST -->
+    <section class="forecast">
+
+      <h2>7-Day Forecast</h2>
+
+      <p class="forecast-description">
+        Forecast information from the National Weather Service.
+        Select a day to view detailed weather conditions.
+      </p>
+
+      <!-- LOADING -->
+      @if (loading) {
+        <div class="status-message" role="status">
+          Loading weather forecast...
+        </div>
+      }
+
+      <!-- ERROR -->
+      @if (error) {
+        <div class="error-message" role="alert">
+          <p>{{ error }}</p>
+
+          <button
+            type="button"
+            class="retry-button"
+            (click)="loadForecast()">
+            Try Again
+          </button>
+        </div>
+      }
+
+      <!-- FORECAST CARDS -->
+      <div class="forecast-grid">
+
+        @for (day of forecast; track day.date) {
+
+          <button
+            type="button"
+            class="forecast-card"
+            [class.selected]="selectedDay?.date === day.date"
+            [attr.aria-pressed]="selectedDay?.date === day.date"
+            (click)="selectDay(day)">
+
+            <h3>{{ day.day }}</h3>
+
+            @if (day.iconUrl) {
+              <img
+                [src]="day.iconUrl"
+                [alt]="day.conditions"
+                width="70"
+                height="70">
+            } @else {
+              <div class="forecast-icon">🌤️</div>
+            }
+
+            <strong>
+              {{ day.high == null ? '—' : day.high + '°' }}
+            </strong>
+
+            <p>{{ day.conditions }}</p>
+
+            <small>
+              Low {{ day.low == null ? '—' : day.low + '°' }}
+            </small>
+
+          </button>
+        }
+
+      </div>
+
+      <!-- SELECTED DAY DETAILS -->
+      @if (selectedDay; as day) {
+
+        <div class="day-details">
+
+          <h3>{{ day.day }} Weather Details</h3>
+
+          <p>{{ day.conditions }}</p>
+
+          <div class="detail-grid">
+
+            <span>
+              High:
+              <strong>
+                {{ day.high == null ? 'N/A' : day.high + '°F' }}
+              </strong>
+            </span>
+
+            <span>
+              Low:
+              <strong>
+                {{ day.low == null ? 'N/A' : day.low + '°F' }}
+              </strong>
+            </span>
+
+            <span>
+              Rain Chance:
+              <strong>
+                {{ day.rainChance == null ? 'N/A' : day.rainChance + '%' }}
+              </strong>
+            </span>
+
+          </div>
+
+          <!-- DETAILS LOADING -->
+          @if (detailsLoading) {
+            <div class="status-message" role="status">
+              Loading detailed forecast...
+            </div>
+          }
+
+          <!-- DETAILS ERROR -->
+          @if (detailsError) {
+            <div class="error-message" role="alert">
+              {{ detailsError }}
+            </div>
+          }
+
+          <!-- DAYTIME AND NIGHTTIME -->
+          @if (selectedDetails; as details) {
+
+            @if (details.daytime; as daytime) {
+              <h4>Daytime Forecast</h4>
+
+              <p>{{ daytime.detailedForecast }}</p>
+
+              <p>
+                <strong>Wind:</strong>
+                {{ daytime.windSpeed }}
+                {{ daytime.windDirection }}
+              </p>
+            }
+
+            @if (details.nighttime; as nighttime) {
+              <h4>Nighttime Forecast</h4>
+
+              <p>{{ nighttime.detailedForecast }}</p>
+
+              <p>
+                <strong>Wind:</strong>
+                {{ nighttime.windSpeed }}
+                {{ nighttime.windDirection }}
+              </p>
+            }
+
+          }
+
+        </div>
+      }
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <strong>USI Weather App</strong>
+
+    <p>CS478 Software Development Project</p>
+
+    <small>
+      Unofficial student project. Not an official USI weather service.
+    </small>
+  </footer>
+
+</div>
