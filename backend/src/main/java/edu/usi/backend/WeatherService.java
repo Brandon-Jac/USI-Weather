@@ -177,21 +177,65 @@ public class WeatherService {
         return day;
     }
 
-    // Retrieves forecast periods from the NWS API
-    private List<?> getForecastPeriods() {
+    // Retrieves the next 24 hours of forecast information
+    public List<Map<String, Object>> getHourlyForecast() {
 
+        // Retrieve hourly periods and store info
+        List<?> periods = getForecastPeriods("forecastHourly");
+        List<Map<String, Object>> hours = new ArrayList<>();
+
+        for (Object item : periods) {
+            if (hours.size() == 24) {
+                break;
+            }
+
+            Map<?, ?> period = (Map<?, ?>) item;
+
+            // Creates a new entry for each hour
+            Map<String, Object> hour = new LinkedHashMap<>();
+
+            hour.put("startTime", period.get("startTime"));
+            hour.put("endTime", period.get("endTime"));
+            hour.put("temperature", period.get("temperature"));
+            hour.put("temperatureUnit", period.get("temperatureUnit"));
+            hour.put("shortForecast", period.get("shortForecast"));
+            hour.put("icon", period.get("icon"));
+            hour.put("windSpeed", period.get("windSpeed"));
+            hour.put("windDirection", period.get("windDirection"));
+            hour.put("isDaytime", period.get("isDaytime"));
+
+            // Precipitation probability
+            Map<?, ?> precipitation = (Map<?, ?>) period.get("probabilityOfPrecipitation");
+            hour.put("precipitationChance", precipitation == null ? null : precipitation.get("value"));
+
+            // Relative humidity
+            Map<?, ?> humidity = (Map<?, ?>) period.get("relativeHumidity");
+            hour.put("relativeHumidity", humidity == null ? null : humidity.get("value"));
+
+            // Add the hourly forecast to the list
+            hours.add(hour);
+        }
+
+        return hours;
+    }
+
+    // Retrieves daytime and nighttime forecast periods
+    private List<?> getForecastPeriods() {
+        return getForecastPeriods("forecast");
+    }
+
+    // Retrieves forecast periods from the NWS API
+    private List<?> getForecastPeriods(String forecastType) {
         // Get location information for USI
         Map<?, ?> location = client.get()
             .uri("https://api.weather.gov/points/37.9625,-87.6775")
             .retrieve()
             .body(Map.class);
 
-        Map<?, ?> properties =
-            (Map<?, ?>) location.get("properties");
+        Map<?, ?> properties = (Map<?, ?>) location.get("properties");
 
         // Get the forecast URL
-        String forecastUrl =
-            (String) properties.get("forecast");
+        String forecastUrl = (String) properties.get(forecastType);
 
         // Request the forecast
         Map<?, ?> forecast = client.get()
@@ -199,8 +243,7 @@ public class WeatherService {
             .retrieve()
             .body(Map.class);
 
-        Map<?, ?> forecastData =
-            (Map<?, ?>) forecast.get("properties");
+        Map<?, ?> forecastData = (Map<?, ?>) forecast.get("properties");
 
         return (List<?>) forecastData.get("periods");
     }
