@@ -57,4 +57,10 @@ public class WeatherController {
 
         return weatherService.getDailyForecast(date);
     }
+
+    // Creates the hourly forecast endpoint
+    @GetMapping("/hourly")
+    public Object getHourlyForecast() {
+        return weatherService.getHourlyForecast();
+    }
 }
